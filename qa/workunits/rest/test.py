@@ -186,8 +186,9 @@ if __name__ == '__main__':
     if len(failresps) == 10:
         fail(r, 'Could not mds setmap in 10 tries; responses:' +
              '\n'.join(failresps))
-    expect('mds/newfs?metadata=0&data=1&sure=--yes-i-really-mean-it', 'PUT',
-           200, '')
+    expect('osd/pool/create?pg_num=1&pool=fsmetadata', 'PUT', 200, '')
+    expect('osd/pool/create?pg_num=1&pool=fsdata', 'PUT', 200, '')
+    expect('fs/new?fs_name=default&metadata=fsmetadata&data=fsdata', 'PUT', 200, '')
     expect('osd/pool/create?pool=data2&pg_num=10', 'PUT', 200, '')
     r = expect('osd/dump', 'GET', 200, 'json', JSONHDR)
     pools = r.myjson['output']['pools']
