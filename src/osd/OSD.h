@@ -40,6 +40,7 @@
 #include "messages/MOSDRepScrub.h"
 #include "OpRequest.h"
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include "include/memory.h"
@@ -317,7 +318,7 @@ public:
      * CLEARING_WAITING and QUEUED indicate that the remover will check
      * stop_deleting before queueing any further operations.  CANCELED
      * indicates that the remover has already halted.  DELETED_DIR
-     * indicates that the deletion has been fully queueud.
+     * indicates that the deletion has been fully queued.
      */
     while (status == DELETING_DIR || status == CLEARING_DIR)
       cond.Wait(lock);
@@ -475,6 +476,7 @@ public:
 
   int get_nodeid() const { return whoami; }
 
+  std::atomic<epoch_t> max_oldest_map;
   OSDMapRef osdmap;
   OSDMapRef get_osdmap() {
     Mutex::Locker l(publish_lock);
@@ -1878,8 +1880,10 @@ private:
 
   void wait_for_new_map(OpRequestRef op);
   void handle_osd_map(class MOSDMap *m);
+  void _committed_osd_maps(epoch_t first, epoch_t last, class MOSDMap *m);
   void note_down_osd(int osd);
   void note_up_osd(int osd);
+  friend class C_OnMapCommit;
 
   bool advance_pg(
     epoch_t advance_to, PG *pg,

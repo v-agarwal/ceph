@@ -266,6 +266,7 @@ Summary:	Ceph Common
 Group:		System Environment/Base
 Requires:	librbd1 = %{epoch}:%{version}-%{release}
 Requires:	librados2 = %{epoch}:%{version}-%{release}
+Requires:	libcephfs1 = %{epoch}:%{version}-%{release}
 Requires:	python-rados = %{epoch}:%{version}-%{release}
 Requires:	python-rbd = %{epoch}:%{version}-%{release}
 Requires:	python-cephfs = %{epoch}:%{version}-%{release}
@@ -974,6 +975,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/ceph-rbdnamer
 %{_bindir}/ceph-syn
 %{_bindir}/ceph-crush-location
+%{_bindir}/cephfs-data-scan
+%{_bindir}/cephfs-journal-tool
+%{_bindir}/cephfs-table-tool
 %{_bindir}/rados
 %{_bindir}/rbd
 %{_bindir}/rbd-replay
@@ -1050,9 +1054,6 @@ fi
 #################################################################################
 %files mds
 %{_bindir}/ceph-mds
-%{_bindir}/cephfs-journal-tool
-%{_bindir}/cephfs-table-tool
-%{_bindir}/cephfs-data-scan
 %{_mandir}/man8/ceph-mds.8*
 %if 0%{?_with_systemd}
 %{_unitdir}/ceph-mds@.service
@@ -1194,12 +1195,27 @@ fi
 
 #################################################################################
 %if %{with ocf}
+
 %files resource-agents
 %defattr(0755,root,root,-)
-%dir /usr/lib/ocf
-%dir /usr/lib/ocf/resource.d
-%dir /usr/lib/ocf/resource.d/ceph
-/usr/lib/ocf/resource.d/%{name}/*
+# N.B. src/ocf/Makefile.am uses $(prefix)/lib
+%dir %{_prefix}/lib/ocf
+%dir %{_prefix}/lib/ocf/resource.d
+%dir %{_prefix}/lib/ocf/resource.d/ceph
+%if 0%{_with_systemd}
+%exclude %{_prefix}/lib/ocf/resource.d/ceph/ceph
+%exclude %{_prefix}/lib/ocf/resource.d/ceph/mds
+%exclude %{_prefix}/lib/ocf/resource.d/ceph/mon
+%exclude %{_prefix}/lib/ocf/resource.d/ceph/osd
+%endif
+%if ! 0%{_with_systemd}
+%{_prefix}/lib/ocf/resource.d/ceph/ceph
+%{_prefix}/lib/ocf/resource.d/ceph/mds
+%{_prefix}/lib/ocf/resource.d/ceph/mon
+%{_prefix}/lib/ocf/resource.d/ceph/osd
+%endif
+%{_prefix}/lib/ocf/resource.d/ceph/rbd
+
 %endif
 
 #################################################################################

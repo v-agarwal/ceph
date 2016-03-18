@@ -235,7 +235,7 @@ OPTION(mon_osd_max_op_age, OPT_DOUBLE, 32)     // max op age before we get conce
 OPTION(mon_osd_max_split_count, OPT_INT, 32) // largest number of PGs per "involved" OSD to let split create
 OPTION(mon_osd_allow_primary_temp, OPT_BOOL, false)  // allow primary_temp to be set in the osdmap
 OPTION(mon_osd_allow_primary_affinity, OPT_BOOL, false)  // allow primary_affinity to be set in the osdmap
-OPTION(mon_osd_prime_pg_temp, OPT_BOOL, false)  // prime osdmap with pg mapping changes
+OPTION(mon_osd_prime_pg_temp, OPT_BOOL, true)  // prime osdmap with pg mapping changes
 OPTION(mon_osd_prime_pg_temp_max_time, OPT_FLOAT, .5)  // max time to spend priming
 OPTION(mon_osd_pool_ec_fast_read, OPT_BOOL, false) // whether turn on fast read on the pool or not
 OPTION(mon_stat_smooth_intervals, OPT_INT, 2)  // smooth stats over last N PGMap maps
@@ -589,6 +589,12 @@ OPTION(osd_uuid, OPT_UUID, uuid_d())
 OPTION(osd_data, OPT_STR, "/var/lib/ceph/osd/$cluster-$id")
 OPTION(osd_journal, OPT_STR, "/var/lib/ceph/osd/$cluster-$id/journal")
 OPTION(osd_journal_size, OPT_INT, 5120)         // in mb
+// flags for specific control purpose during osd mount() process. 
+// e.g., can be 1 to skip over replaying journal
+// or 2 to skip over mounting omap or 3 to skip over both.
+// This might be helpful in case the journal is totally corrupted
+// and we still want to bring the osd daemon back normally, etc.
+OPTION(osd_os_flags, OPT_U32, 0)
 OPTION(osd_max_write_size, OPT_INT, 90)
 OPTION(osd_max_pgls, OPT_U64, 1024) // max number of pgls entries to return
 OPTION(osd_client_message_size_cap, OPT_U64, 500*1024L*1024L) // client data allowed in-memory (in bytes)
@@ -1252,8 +1258,8 @@ OPTION(rgw_ldap_uri, OPT_STR, "ldaps://<ldap.your.domain>")
 OPTION(rgw_ldap_binddn, OPT_STR, "uid=admin,cn=users,dc=example,dc=com")
 /* rgw_ldap_searchdn  LDAP search base (basedn) */
 OPTION(rgw_ldap_searchdn, OPT_STR, "cn=users,cn=accounts,dc=example,dc=com")
-/* rgw_ldap_memberattr  LDAP attribute containing RGW user names */
-OPTION(rgw_ldap_memberattr, OPT_STR, "uid")
+/* rgw_ldap_dnattr  LDAP attribute containing RGW user names (to form binddns)*/
+OPTION(rgw_ldap_dnattr, OPT_STR, "uid")
 /* rgw_ldap_secret  file containing credentials for rgw_ldap_binddn */
 OPTION(rgw_ldap_secret, OPT_STR, "/etc/openldap/secret")
 /* rgw_s3_auth_use_ldap  use LDAP for RGW auth? */

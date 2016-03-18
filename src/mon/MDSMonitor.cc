@@ -1568,14 +1568,6 @@ int MDSMonitor::management_command(
         return -EINVAL;
     }
 
-    if (pending_fsmap.any_filesystems()
-        && !pending_fsmap.get_enable_multiple()) {
-      ss << "Creation of multiple filesystems is disabled.  To enable "
-            "this experimental feature, use 'ceph fs flag set enable_multiple "
-            "true'";
-      return -EINVAL;
-    }
-
     if (pending_fsmap.get_filesystem(fs_name)) {
       auto fs = pending_fsmap.get_filesystem(fs_name);
       if (*(fs->mds_map.data_pools.begin()) == data
@@ -1587,6 +1579,14 @@ int MDSMonitor::management_command(
         ss << "filesystem already exists with name '" << fs_name << "'";
         return -EINVAL;
       }
+    }
+
+    if (pending_fsmap.any_filesystems()
+        && !pending_fsmap.get_enable_multiple()) {
+      ss << "Creation of multiple filesystems is disabled.  To enable "
+            "this experimental feature, use 'ceph fs flag set enable_multiple "
+            "true'";
+      return -EINVAL;
     }
 
     pg_pool_t const *data_pool = mon->osdmon()->osdmap.get_pg_pool(data);
@@ -1979,7 +1979,7 @@ class RemoveDataPoolHandler : public FileSystemCommandHandler
 {
   public:
   RemoveDataPoolHandler()
-    : FileSystemCommandHandler("fs remove_data_pool")
+    : FileSystemCommandHandler("fs rm_data_pool")
   {}
 
   int handle(
@@ -2926,5 +2926,7 @@ MDSMonitor::MDSMonitor(Monitor *mn, Paxos *p, string service_name)
   handlers.push_back(std::make_shared<RemoveDataPoolHandler>());
   handlers.push_back(std::make_shared<LegacyHandler<RemoveDataPoolHandler> >(
         "mds remove_data_pool"));
+  handlers.push_back(std::make_shared<LegacyHandler<RemoveDataPoolHandler> >(
+        "mds rm_data_pool"));
 }
 
